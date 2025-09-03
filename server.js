@@ -9,7 +9,7 @@ import locationRoutes from './routes/locationRoutes.js';
 import guideRoutes from './routes/guideRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import historyRoutes from './routes/historyRoutes.js';
-import scheduleRoutes from './routes/scheduleRoutes.js';
+import scheduleRoutes from './routes/ScheduleRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import articleRoutes from './routes/ArticleRoutes.js';
 
