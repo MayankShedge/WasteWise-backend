@@ -13,7 +13,7 @@ const createTransporter = () => {
 
 const sendVerificationEmail = async (userEmail, token) => {
     const transporter = createTransporter();
-    const verificationUrl = `http://localhost:5173/verify-email/${token}`;
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
 
     const mailOptions = {
         from: `"WasteWise" <${process.env.GMAIL_USER}>`,
