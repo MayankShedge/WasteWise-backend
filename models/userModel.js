@@ -1,5 +1,3 @@
-// backend/models/userModel.js
-
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
@@ -9,9 +7,11 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     points: { type: Number, default: 0 },
-    isAdmin: { type: Boolean, default: false }, // For our next step
-    isVerified: { type: Boolean, default: false }, // <-- ADD THIS
-    verificationToken: { type: String }, // <-- AND THIS
+    isAdmin: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
+    verificationToken: { type: String },
+    // --- THIS IS THE NEWLY ADDED FIELD ---
+    badge: { type: String, default: 'Recycling Rookie' },
   },
   {
     timestamps: true,
@@ -35,3 +35,4 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 const User = mongoose.model('User', userSchema);
 
 export default User;
+

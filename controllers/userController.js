@@ -3,10 +3,20 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendVerificationEmail } from '../utils/sendEmail.js';
 
-// ... (generateToken, registerUser, verifyUserEmail, loginUser, getUserProfile, addUserPoints functions remain the same)
+// --- NEW: Badge Logic Helper Function ---
+// This function determines which badge a user has earned based on their points.
+const getBadgeForPoints = (points) => {
+    if (points >= 500) return 'Waste Warrior';
+    if (points >= 250) return 'Eco Enthusiast';
+    if (points >= 100) return 'Green Guardian';
+    return 'Recycling Rookie';
+};
+
+// ---UNCHANGED FUNCTIONS---
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
+
 const registerUser = async (req, res) => {
   const { name, email, password, secretKey } = req.body;
   const userExists = await User.findOne({ email });
@@ -32,6 +42,7 @@ const registerUser = async (req, res) => {
     res.status(400).json({ message: 'Invalid user data' });
   }
 };
+
 const verifyUserEmail = async (req, res) => {
   const { token } = req.params;
   const user = await User.findOne({ verificationToken: token });
@@ -43,41 +54,54 @@ const verifyUserEmail = async (req, res) => {
   await user.save();
   res.status(200).json({ message: 'Email verified successfully! You can now log in.' });
 };
+
+// --- UPDATED loginUser function ---
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
+
   if (user && (await user.matchPassword(password))) {
     if (!user.isVerified) {
       return res.status(401).json({ message: 'Please verify your email to log in.' });
     }
+
     res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
       points: user.points,
       isAdmin: user.isAdmin,
+      badge: user.badge, // We now send the user's badge on login
       token: generateToken(user._id),
     });
   } else {
     res.status(401).json({ message: 'Invalid email or password' });
   }
 };
+
 const getUserProfile = async (req, res) => {
   res.json(req.user);
 };
+
+// --- UPDATED addUserPoints function ---
 const addUserPoints = async (req, res) => {
   const pointsToAdd = 10;
   try {
     const user = await User.findById(req.user._id);
     if (user) {
       user.points = user.points + pointsToAdd;
+      // Check for a new badge after updating points
+      user.badge = getBadgeForPoints(user.points);
       const updatedUser = await user.save();
+      
+      // Respond with the full updated user profile, including the new badge
       res.json({
         _id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
         points: updatedUser.points,
         isAdmin: updatedUser.isAdmin,
+        badge: updatedUser.badge, 
         token: req.headers.authorization.split(' ')[1]
       });
     } else {
@@ -91,9 +115,9 @@ const addUserPoints = async (req, res) => {
 const getLeaderboard = async (req, res) => {
     try {
         const topUsers = await User.find({})
-            .sort({ points: -1 }) // Sort by points in descending order
-            .limit(10) // Get the top 10 users
-            .select('name points'); // Only select the name and points fields
+            .sort({ points: -1 })
+            .limit(10)
+            .select('name points');
         
         res.json(topUsers);
     } catch (error) {
@@ -103,3 +127,4 @@ const getLeaderboard = async (req, res) => {
 
 
 export { registerUser, loginUser, getUserProfile, verifyUserEmail, addUserPoints, getLeaderboard };
+
