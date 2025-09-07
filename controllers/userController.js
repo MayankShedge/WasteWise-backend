@@ -1,10 +1,9 @@
 import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { sendVerificationEmail } from '../utils/sendEmail.js';
+// 1. Import the new email function
+import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/sendEmail.js';
 
-// --- NEW: Badge Logic Helper Function ---
-// This function determines which badge a user has earned based on their points.
 const getBadgeForPoints = (points) => {
     if (points >= 500) return 'Waste Warrior';
     if (points >= 250) return 'Eco Enthusiast';
@@ -12,7 +11,6 @@ const getBadgeForPoints = (points) => {
     return 'Recycling Rookie';
 };
 
-// ---UNCHANGED FUNCTIONS---
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
@@ -55,23 +53,20 @@ const verifyUserEmail = async (req, res) => {
   res.status(200).json({ message: 'Email verified successfully! You can now log in.' });
 };
 
-// --- UPDATED loginUser function ---
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-
   if (user && (await user.matchPassword(password))) {
     if (!user.isVerified) {
       return res.status(401).json({ message: 'Please verify your email to log in.' });
     }
-
     res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
       points: user.points,
       isAdmin: user.isAdmin,
-      badge: user.badge, // We now send the user's badge on login
+      badge: user.badge,
       token: generateToken(user._id),
     });
   } else {
@@ -83,18 +78,14 @@ const getUserProfile = async (req, res) => {
   res.json(req.user);
 };
 
-// --- UPDATED addUserPoints function ---
 const addUserPoints = async (req, res) => {
   const pointsToAdd = 10;
   try {
     const user = await User.findById(req.user._id);
     if (user) {
       user.points = user.points + pointsToAdd;
-      // Check for a new badge after updating points
       user.badge = getBadgeForPoints(user.points);
       const updatedUser = await user.save();
-      
-      // Respond with the full updated user profile, including the new badge
       res.json({
         _id: updatedUser._id,
         name: updatedUser.name,
@@ -114,17 +105,73 @@ const addUserPoints = async (req, res) => {
 
 const getLeaderboard = async (req, res) => {
     try {
-        const topUsers = await User.find({})
-            .sort({ points: -1 })
-            .limit(10)
-            .select('name points');
-        
+        const topUsers = await User.find({}).sort({ points: -1 }).limit(10).select('name points');
         res.json(topUsers);
     } catch (error) {
         res.status(500).json({ message: 'Server error while fetching leaderboard.' });
     }
 };
 
+// --- NEW: FORGOT PASSWORD FUNCTION ---
+// @desc    Generate and email a password reset token
+// @route   POST /api/users/forgot-password
+// @access  Public
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            // We send a generic success message even if the user doesn't exist for security reasons
+            return res.json({ message: "If a user with that email exists, a password reset link has been sent." });
+        }
 
-export { registerUser, loginUser, getUserProfile, verifyUserEmail, addUserPoints, getLeaderboard };
+        // Generate a reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        user.passwordResetToken = resetToken;
+        // Set token to expire in 15 minutes
+        user.passwordResetExpires = Date.now() + 15 * 60 * 1000; 
+        
+        // Save the token to the user document without triggering password re-hashing
+        await user.save({ validateBeforeSave: false });
+
+        await sendPasswordResetEmail(user.email, resetToken);
+        res.json({ message: "Password reset link has been sent to your email." });
+
+    } catch (error) {
+        console.error('Forgot Password Error:', error);
+        res.status(500).json({ message: "Error sending password reset email." });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    try {
+        const user = await User.findOne({
+            passwordResetToken: token,
+            passwordResetExpires: { $gt: Date.now() } // Check if token is not expired
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: "Password reset token is invalid or has expired." });
+        }
+
+        // Set the new password and clear the reset token fields
+        user.password = password;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+
+        // The pre-save hook in userModel will automatically hash the new password
+        await user.save();
+
+        res.json({ message: "Password has been reset successfully. You can now log in." });
+    } catch (error) {
+        console.error("Reset Password Error:", error);
+        res.status(500).json({ message: "Error resetting password." });
+    }
+};
+
+// 3. Export the new functions
+export { registerUser, loginUser, getUserProfile, verifyUserEmail, addUserPoints, getLeaderboard, forgotPassword, resetPassword };
 

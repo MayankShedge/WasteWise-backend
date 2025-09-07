@@ -19,7 +19,6 @@ const sendVerificationEmail = async (userEmail, token) => {
         from: `"WasteWise" <${process.env.GMAIL_USER}>`,
         to: userEmail,
         subject: 'Please verify your email for WasteWise',
-        // --- NEW, IMPROVED HTML TEMPLATE ---
         html: `
           <div style="background-color: #f4f4f4; padding: 20px; font-family: Arial, sans-serif; line-height: 1.6;">
             <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
@@ -59,7 +58,6 @@ const sendVerificationEmail = async (userEmail, token) => {
 const sendAdminReportEmail = async (adminEmail, reports) => {
     const transporter = createTransporter();
     
-    // --- NEW, IMPROVED HTML TABLE TEMPLATE ---
     const reportsHtml = `
       <div style="background-color: #f8f9fa; padding: 20px; font-family: Arial, sans-serif;">
         <div style="max-width: 800px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px;">
@@ -102,5 +100,45 @@ const sendAdminReportEmail = async (adminEmail, reports) => {
     }
 };
 
-export { sendVerificationEmail, sendAdminReportEmail };
+// --- NEW: FUNCTION TO SEND PASSWORD RESET EMAIL ---
+const sendPasswordResetEmail = async (userEmail, token) => {
+    const transporter = createTransporter();
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+
+    const mailOptions = {
+        from: `"WasteWise" <${process.env.GMAIL_USER}>`,
+        to: userEmail,
+        subject: 'Password Reset Request for WasteWise',
+        html: `
+          <div style="background-color: #f4f4f4; padding: 20px; font-family: Arial, sans-serif; line-height: 1.6;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+              <div style="text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 20px;">
+                <h1 style="color: #2E7D32; font-size: 28px;">WasteWise ♻️</h1>
+              </div>
+              <h2 style="color: #333; text-align: center;">Password Reset Request</h2>
+              <p style="color: #555; font-size: 16px;">You are receiving this email because you (or someone else) have requested the reset of the password for your account.</p>
+              <p style="color: #555; font-size: 16px;">Please click the button below to choose a new password. This link will expire in 15 minutes.</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" 
+                   style="background-color: #f0ad4e; color: white; padding: 15px 30px; text-decoration: none; display: inline-block; border-radius: 8px; font-size: 18px; font-weight: bold;">
+                   Reset Your Password
+                </a>
+              </div>
+              <p style="color: #777; font-size: 14px;">If you did not request this, please ignore this email and your password will remain unchanged.</p>
+            </div>
+          </div>
+        `,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Password reset email sent to ${userEmail}`);
+    } catch (error) {
+        console.error('Error sending password reset email:', error);
+        throw new Error('Email could not be sent.');
+    }
+};
+
+
+export { sendVerificationEmail, sendAdminReportEmail, sendPasswordResetEmail };
 

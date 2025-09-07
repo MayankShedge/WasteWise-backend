@@ -5,7 +5,9 @@ import {
   getUserProfile,
   verifyUserEmail,
   addUserPoints,
-  getLeaderboard, // 1. Import new function
+  getLeaderboard,
+  forgotPassword, // 1. Import the new functions
+  resetPassword,
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -15,7 +17,9 @@ const router = express.Router();
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.get('/verify/:token', verifyUserEmail);
-router.get('/leaderboard', getLeaderboard); // 2. Add new public route
+router.get('/leaderboard', getLeaderboard);
+router.post('/forgot-password', forgotPassword); // 2. Add the "forgot password" route
+router.put('/reset-password/:token', resetPassword); // 3. Add the "reset password" route
 
 // Protected routes
 router.get('/profile', protect, getUserProfile);

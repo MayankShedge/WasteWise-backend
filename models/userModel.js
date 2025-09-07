@@ -10,15 +10,17 @@ const userSchema = new mongoose.Schema(
     isAdmin: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
     verificationToken: { type: String },
-    // --- THIS IS THE NEWLY ADDED FIELD ---
     badge: { type: String, default: 'Recycling Rookie' },
+    // --- NEW: Fields for Password Reset ---
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date },
   },
   {
     timestamps: true,
   }
 );
 
-// This Mongoose "pre-save" hook hashes the password before saving a new user
+// ... (pre-save hook and matchPassword method remain the same)
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     next();
@@ -27,12 +29,11 @@ userSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Method to compare entered password with the hashed password
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
+
 const User = mongoose.model('User', userSchema);
 
 export default User;
-
