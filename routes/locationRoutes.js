@@ -1,10 +1,9 @@
-// backend/routes/locationRoutes.js
-
 import express from 'express';
-import { getLocations } from '../controllers/locationController.js';
+import { getLocations, getNearbyLocations } from '../controllers/locationController.js';
 
 const router = express.Router();
 
 router.route('/').get(getLocations);
+router.route('/nearby').get(getNearbyLocations); 
 
 export default router;
