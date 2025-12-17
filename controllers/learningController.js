@@ -1,8 +1,5 @@
 import Learning from '../models/learningModel.js';
 
-// @desc    Get learning for a specific detected item
-// @route   GET /api/learning/:detectedItem
-// @access  Public (used by scanner)
 const getLearningForItem = async (req, res) => {
   try {
     const { detectedItem } = req.params;
