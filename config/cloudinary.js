@@ -10,11 +10,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configure storage for our reports
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: {
-    folder: 'WasteWise_Reports', // A folder name in your Cloudinary account
+    folder: 'WasteWise_Reports',
     allowed_formats: ['jpeg', 'png', 'jpg'],
   },
 });
