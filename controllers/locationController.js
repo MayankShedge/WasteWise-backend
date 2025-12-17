@@ -1,7 +1,5 @@
 import Location from '../models/locationModel.js';
 
-// @desc    Fetch all locations
-// @route   GET /api/locations
 const getLocations = async (req, res) => {
   try {
     const locations = await Location.find({});
@@ -11,8 +9,6 @@ const getLocations = async (req, res) => {
   }
 };
 
-// @desc    Fetch locations near user (NEW)
-// @route   GET /api/locations/nearby?lat=19.0330&lng=73.0297&maxDistance=5000
 const getNearbyLocations = async (req, res) => {
   try {
     const { lat, lng, maxDistance = 10000 } = req.query; // Default 10km radius

@@ -24,9 +24,9 @@ const protect = async (req, res, next) => {
 
 const admin = (req, res, next) => {
   if (req.user && req.user.isAdmin) {
-    next(); // User is an admin, proceed to the next function
+    next(); 
   } else {
-    res.status(403).json({ message: 'Not authorized as an admin' }); // 403 Forbidden
+    res.status(403).json({ message: 'Not authorized as an admin' }); 
   }
 };
 

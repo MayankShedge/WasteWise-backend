@@ -1,5 +1,3 @@
-// backend/routes/guideRoutes.js
-
 import express from 'express';
 import { getGuideData } from '../controllers/guideController.js';
 

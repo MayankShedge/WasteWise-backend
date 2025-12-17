@@ -5,7 +5,7 @@ const scanHistorySchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: 'User', // This creates a reference to our User model
+      ref: 'User', 
     },
     item: {
       type: String,
@@ -15,7 +15,6 @@ const scanHistorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // NEW FIELDS - Enhanced tracking
     confidence: {
       type: Number,
       min: 0,
@@ -54,7 +53,6 @@ const scanHistorySchema = new mongoose.Schema(
   }
 );
 
-// Add indexes for better performance
 scanHistorySchema.index({ user: 1, createdAt: -1 });
 scanHistorySchema.index({ method: 1, createdAt: -1 });
 scanHistorySchema.index({ category: 1, method: 1 });

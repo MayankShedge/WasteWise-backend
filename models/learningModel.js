@@ -25,15 +25,13 @@ const learningSchema = new mongoose.Schema({
     type: Date, 
     default: Date.now 
   },
-  // Track which users contributed to this learning
   contributedBy: [{
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     timestamp: { type: Date, default: Date.now }
   }],
-  // Performance tracking
   successRate: {
     type: Number,
-    default: 1.0  // How often this learning is correct
+    default: 1.0  
   }
 }, {
   timestamps: true

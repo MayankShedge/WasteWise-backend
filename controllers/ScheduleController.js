@@ -1,8 +1,5 @@
 import Schedule from '../models/ScheduleModel.js';
 
-// @desc    Get all schedules
-// @route   GET /api/schedules
-// @access  Public
 const getSchedules = async (req, res) => {
     try {
         const schedules = await Schedule.find({});
@@ -12,9 +9,6 @@ const getSchedules = async (req, res) => {
     }
 };
 
-// @desc    Create a new schedule
-// @route   POST /api/schedules
-// @access  Private/Admin
 const createSchedule = async (req, res) => {
     try {
         const newSchedule = new Schedule({
@@ -28,9 +22,6 @@ const createSchedule = async (req, res) => {
     }
 };
 
-// @desc    Update a schedule
-// @route   PUT /api/schedules/:id
-// @access  Private/Admin
 const updateSchedule = async (req, res) => {
     const { area, collection } = req.body;
     try {
@@ -50,9 +41,6 @@ const updateSchedule = async (req, res) => {
     }
 };
 
-// @desc    Delete a schedule
-// @route   DELETE /api/schedules/:id
-// @access  Private/Admin
 const deleteSchedule = async (req, res) => {
     try {
         const schedule = await Schedule.findById(req.params.id);

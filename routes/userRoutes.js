@@ -18,8 +18,8 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.get('/verify/:token', verifyUserEmail);
 router.get('/leaderboard', getLeaderboard);
-router.post('/forgot-password', forgotPassword); // 2. Add the "forgot password" route
-router.put('/reset-password/:token', resetPassword); // 3. Add the "reset password" route
+router.post('/forgot-password', forgotPassword); 
+router.put('/reset-password/:token', resetPassword); 
 
 // Protected routes
 router.get('/profile', protect, getUserProfile);

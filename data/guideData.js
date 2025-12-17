@@ -1,5 +1,3 @@
-// backend/data/guideData.js
-
 export const guideData = {
   wetWaste: {
     title: 'Wet Waste (Biodegradable)',

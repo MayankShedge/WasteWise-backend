@@ -7,7 +7,7 @@ import {
     deleteArticle
 } from '../controllers/ArticleController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
-import { storage } from '../config/cloudinary.js'; // We can reuse the same storage config
+import { storage } from '../config/cloudinary.js'; 
 
 const router = express.Router();
 const upload = multer({ storage });

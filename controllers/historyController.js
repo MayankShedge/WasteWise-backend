@@ -1,8 +1,5 @@
 import ScanHistory from '../models/scanHistoryModel.js';
 
-// @desc    Log a new scan event (UPDATED)
-// @route   POST /api/history
-// @access  Private
 const logScan = async (req, res) => {
   const { 
     item, 
@@ -19,7 +16,7 @@ const logScan = async (req, res) => {
 
   try {
     const newScan = new ScanHistory({
-      user: req.user._id, // req.user comes from our 'protect' middleware
+      user: req.user._id, 
       item,
       category,
       confidence: confidence ? parseFloat(confidence) : null,
@@ -36,12 +33,8 @@ const logScan = async (req, res) => {
   }
 };
 
-// @desc    Get a user's scan history
-// @route   GET /api/history
-// @access  Private
 const getScanHistory = async (req, res) => {
   try {
-    // Find all scans for the logged-in user and sort by newest first
     const history = await ScanHistory.find({ user: req.user._id }).sort({ createdAt: -1 });
     res.json(history);
   } catch (error) {
@@ -50,14 +43,10 @@ const getScanHistory = async (req, res) => {
   }
 };
 
-// @desc    Get enhanced analytics for user
-// @route   GET /api/history/analytics
-// @access  Private
 const getEnhancedAnalytics = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Method usage statistics
     const methodStats = await ScanHistory.aggregate([
       { $match: { user: userId } },
       {
@@ -70,7 +59,6 @@ const getEnhancedAnalytics = async (req, res) => {
       { $sort: { count: -1 } }
     ]);
 
-    // Category statistics with method breakdown
     const categoryStats = await ScanHistory.aggregate([
       { $match: { user: userId } },
       {
@@ -84,7 +72,6 @@ const getEnhancedAnalytics = async (req, res) => {
       { $sort: { count: -1 } }
     ]);
 
-    // Recent activity (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -106,7 +93,6 @@ const getEnhancedAnalytics = async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
-    // Overall stats
     const totalScans = await ScanHistory.countDocuments({ user: userId });
     const totalThisWeek = await ScanHistory.countDocuments({ 
       user: userId, 

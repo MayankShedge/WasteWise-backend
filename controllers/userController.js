@@ -1,7 +1,6 @@
 import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-// 1. Import the new email function
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/sendEmail.js';
 
 const getBadgeForPoints = (points) => {
@@ -112,26 +111,18 @@ const getLeaderboard = async (req, res) => {
     }
 };
 
-// --- NEW: FORGOT PASSWORD FUNCTION ---
-// @desc    Generate and email a password reset token
-// @route   POST /api/users/forgot-password
-// @access  Public
 const forgotPassword = async (req, res) => {
     const { email } = req.body;
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            // We send a generic success message even if the user doesn't exist for security reasons
             return res.json({ message: "If a user with that email exists, a password reset link has been sent." });
         }
 
-        // Generate a reset token
         const resetToken = crypto.randomBytes(32).toString('hex');
         user.passwordResetToken = resetToken;
-        // Set token to expire in 15 minutes
         user.passwordResetExpires = Date.now() + 15 * 60 * 1000; 
         
-        // Save the token to the user document without triggering password re-hashing
         await user.save({ validateBeforeSave: false });
 
         await sendPasswordResetEmail(user.email, resetToken);
@@ -150,19 +141,17 @@ const resetPassword = async (req, res) => {
     try {
         const user = await User.findOne({
             passwordResetToken: token,
-            passwordResetExpires: { $gt: Date.now() } // Check if token is not expired
+            passwordResetExpires: { $gt: Date.now() } 
         });
 
         if (!user) {
             return res.status(400).json({ message: "Password reset token is invalid or has expired." });
         }
 
-        // Set the new password and clear the reset token fields
         user.password = password;
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
 
-        // The pre-save hook in userModel will automatically hash the new password
         await user.save();
 
         res.json({ message: "Password has been reset successfully. You can now log in." });
@@ -172,6 +161,5 @@ const resetPassword = async (req, res) => {
     }
 };
 
-// 3. Export the new functions
 export { registerUser, loginUser, getUserProfile, verifyUserEmail, addUserPoints, getLeaderboard, forgotPassword, resetPassword };
 

@@ -1,5 +1,4 @@
 export const locations = [
-  // 1–22: Your entries
   {
     name: 'SIDDHI WASTETOGREEN LTD',
     address: 'Office No. 128, 1st Floor, Devi Annapurna Co-Op. Society Plot, 8, Mafco Market Road, Sector 18, Vashi, Navi Mumbai, Maharashtra 400705',

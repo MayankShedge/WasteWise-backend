@@ -100,7 +100,7 @@ const sendAdminReportEmail = async (adminEmail, reports) => {
     }
 };
 
-// --- NEW: FUNCTION TO SEND PASSWORD RESET EMAIL ---
+
 const sendPasswordResetEmail = async (userEmail, token) => {
     const transporter = createTransporter();
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;

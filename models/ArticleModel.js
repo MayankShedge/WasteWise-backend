@@ -14,10 +14,10 @@ const articleSchema = new mongoose.Schema(
     author: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: 'User', // Reference to the admin who wrote it
+      ref: 'User', 
     },
     imageUrl: {
-      type: String, // URL for the article's header image from Cloudinary
+      type: String, 
       required: true,
     },
   },

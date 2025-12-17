@@ -1,18 +1,13 @@
 import Feedback from '../models/feedbackModel.js';
 import { createOrUpdateLearning } from './learningController.js';
 
-// @desc    Submit user feedback
-// @route   POST /api/feedback
-// @access  Private
 const submitFeedback = async (req, res) => {
   const { originalResult, userSaysCorrect, userCorrection, imageMetadata } = req.body;
 
-  // Validation
   if (!originalResult || typeof userSaysCorrect !== 'boolean') {
     return res.status(400).json({ message: 'Original result and user feedback are required' });
   }
 
-  // If user says it's incorrect, correction is required
   if (!userSaysCorrect && !userCorrection) {
     return res.status(400).json({ message: 'User correction is required when marking as incorrect' });
   }
@@ -27,7 +22,6 @@ const submitFeedback = async (req, res) => {
       },
       userSaysCorrect,
       userCorrection: userSaysCorrect ? null : userCorrection,
-      // ✅ FIXED: Properly structure imageMetadata
       imageMetadata: {
         size: imageMetadata?.size || null,
         type: imageMetadata?.type || null,
@@ -41,7 +35,6 @@ const submitFeedback = async (req, res) => {
 
     const savedFeedback = await feedback.save();
 
-    // 🧠 NEW: Auto-learn from incorrect feedback
     if (!userSaysCorrect && originalResult.detectedItem) {
       try {
         console.log(`🧠 Learning from feedback: ${originalResult.detectedItem} → ${userCorrection}`);
@@ -52,8 +45,7 @@ const submitFeedback = async (req, res) => {
         );
         console.log('✅ Learning updated successfully');
       } catch (learningError) {
-        console.error('❌ Learning update failed:', learningError);
-        // Don't fail the feedback submission if learning fails
+        console.error('Learning update failed:', learningError);
       }
     }
 
@@ -73,9 +65,6 @@ const submitFeedback = async (req, res) => {
   }
 };
 
-// @desc    Get user's feedback history
-// @route   GET /api/feedback/my-feedback
-// @access  Private
 const getUserFeedback = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -105,9 +94,6 @@ const getUserFeedback = async (req, res) => {
   }
 };
 
-// @desc    Get feedback analytics (for admin/development)
-// @route   GET /api/feedback/analytics
-// @access  Private
 const getFeedbackAnalytics = async (req, res) => {
   try {
     // Overall accuracy by category
@@ -166,7 +152,6 @@ const getFeedbackAnalytics = async (req, res) => {
       }
     ]);
 
-    // Common misclassifications
     const misclassifications = await Feedback.aggregate([
       { $match: { userSaysCorrect: false } },
       {
@@ -182,7 +167,6 @@ const getFeedbackAnalytics = async (req, res) => {
       { $limit: 10 }
     ]);
 
-    // Summary statistics
     const totalFeedback = await Feedback.countDocuments();
     const correctPredictions = await Feedback.countDocuments({ userSaysCorrect: true });
     const incorrectPredictions = await Feedback.countDocuments({ userSaysCorrect: false });

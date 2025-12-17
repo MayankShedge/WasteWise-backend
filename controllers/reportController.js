@@ -1,7 +1,6 @@
 import Report from '../models/reportModel.js';
 import { sendAdminReportEmail } from '../utils/sendEmail.js';
 
-// ... (createReport, getReports, updateReportStatus, deleteReport functions remain the same)
 const createReport = async (req, res) => {
   try {
     const { description, location } = req.body;

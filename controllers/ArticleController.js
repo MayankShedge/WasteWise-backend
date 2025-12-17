@@ -1,8 +1,5 @@
 import Article from '../models/ArticleModel.js';
 
-// @desc    Get all articles
-// @route   GET /api/articles
-// @access  Public
 const getArticles = async (req, res) => {
     try {
         const articles = await Article.find({}).populate('author', 'name').sort({ createdAt: -1 });
@@ -12,9 +9,6 @@ const getArticles = async (req, res) => {
     }
 };
 
-// @desc    Get a single article by ID
-// @route   GET /api/articles/:id
-// @access  Public
 const getArticleById = async (req, res) => {
     try {
         const article = await Article.findById(req.params.id).populate('author', 'name');
@@ -28,9 +22,6 @@ const getArticleById = async (req, res) => {
     }
 };
 
-// @desc    Create an article
-// @route   POST /api/articles
-// @access  Private/Admin
 const createArticle = async (req, res) => {
     try {
         const { title, content } = req.body;
@@ -47,9 +38,6 @@ const createArticle = async (req, res) => {
     }
 };
 
-// @desc    Delete an article
-// @route   DELETE /api/articles/:id
-// @access  Private/Admin
 const deleteArticle = async (req, res) => {
     try {
         const article = await Article.findById(req.params.id);

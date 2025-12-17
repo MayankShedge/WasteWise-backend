@@ -11,7 +11,6 @@ const userSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     verificationToken: { type: String },
     badge: { type: String, default: 'Recycling Rookie' },
-    // --- NEW: Fields for Password Reset ---
     passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
   },
