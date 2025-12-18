@@ -24,17 +24,14 @@ const scanHistorySchema = new mongoose.Schema(
     method: {
       type: String,
       enum: [
-        'MobileNet Only',
-        'CLIP (High Confidence)',
-        'Hybrid (Models Agree)',
-        'MobileNet (Higher Confidence)',
-        'CLIP (Higher Confidence)',
-        'Enhanced MobileNet',
         'Enhanced MobileNet v2',
         'Advanced Text Analysis',
         'Hybrid Agreement',
-        'Super Enhanced v2',
-        'Learning Enhanced',           
+        'Learning Enhanced',
+        'Improved Classification',
+        'Fallback - Vehicle Detection',
+        'Fallback - Recyclable Detection',
+        'Fallback - Safe Default',
         'Legacy'
       ],
       default: 'Legacy'
