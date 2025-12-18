@@ -37,7 +37,8 @@ const feedbackSchema = new mongoose.Schema(
       },
       detectedItem: {
         type: String,
-        required: true
+        required: false,
+        default: 'Unknown'
       }
     },
     userSaysCorrect: {
