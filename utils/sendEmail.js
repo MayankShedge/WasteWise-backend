@@ -1,47 +1,43 @@
-import { Resend } from 'resend';
+import * as brevo from '@getbrevo/brevo';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const apiInstance = new brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
 
 const sendVerificationEmail = async (userEmail, token) => {
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
 
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = { name: "WasteWise", email: "shedgemayank0@gmail.com" };
+    sendSmtpEmail.to = [{ email: userEmail }];
+    sendSmtpEmail.subject = "Please verify your email for WasteWise";
+    sendSmtpEmail.htmlContent = `
+      <div style="background-color: #f4f4f4; padding: 20px; font-family: Arial, sans-serif; line-height: 1.6;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+          <div style="text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 20px;">
+            <h1 style="color: #2E7D32; font-size: 28px;">WasteWise ♻️</h1>
+          </div>
+          <h2 style="color: #333; text-align: center;">Welcome! Just one more step...</h2>
+          <p style="color: #555; font-size: 16px;">
+            Thank you for registering with WasteWise. Please click the button below to verify your email address and activate your account.
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" 
+               style="background-color: #28a745; color: white; padding: 15px 30px; text-align: center; text-decoration: none; display: inline-block; border-radius: 8px; font-size: 18px; font-weight: bold;">
+               Verify Your Email
+            </a>
+          </div>
+          <p style="color: #777; font-size: 14px;">
+            If you did not create an account, no further action is required.
+          </p>
+          <div style="text-align: center; font-size: 12px; color: #aaa; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
+            <p>WasteWise Navi Mumbai</p>
+          </div>
+        </div>
+      </div>
+    `;
+
     try {
-        const { data, error } = await resend.emails.send({
-            from: 'WasteWise <onboarding@resend.dev>',
-            to: [userEmail],
-            subject: 'Please verify your email for WasteWise',
-            html: `
-              <div style="background-color: #f4f4f4; padding: 20px; font-family: Arial, sans-serif; line-height: 1.6;">
-                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                  <div style="text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 20px;">
-                    <h1 style="color: #2E7D32; font-size: 28px;">WasteWise ♻️</h1>
-                  </div>
-                  <h2 style="color: #333; text-align: center;">Welcome! Just one more step...</h2>
-                  <p style="color: #555; font-size: 16px;">
-                    Thank you for registering with WasteWise. Please click the button below to verify your email address and activate your account.
-                  </p>
-                  <div style="text-align: center; margin: 30px 0;">
-                    <a href="${verificationUrl}" 
-                       style="background-color: #28a745; color: white; padding: 15px 30px; text-align: center; text-decoration: none; display: inline-block; border-radius: 8px; font-size: 18px; font-weight: bold;">
-                       Verify Your Email
-                    </a>
-                  </div>
-                  <p style="color: #777; font-size: 14px;">
-                    If you did not create an account, no further action is required.
-                  </p>
-                  <div style="text-align: center; font-size: 12px; color: #aaa; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
-                    <p>WasteWise Navi Mumbai</p>
-                  </div>
-                </div>
-              </div>
-            `,
-        });
-
-        if (error) {
-            console.error('Resend API Error:', error);
-            throw new Error('Email could not be sent.');
-        }
-
+        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
         console.log(`Verification email sent to ${userEmail}`, data);
     } catch (error) {
         console.error('Error sending verification email:', error);
@@ -77,19 +73,14 @@ const sendAdminReportEmail = async (adminEmail, reports) => {
       </div>
     `;
 
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = { name: "WasteWise Reporter", email: "shedgemayank0@gmail.com" };
+    sendSmtpEmail.to = [{ email: adminEmail }];
+    sendSmtpEmail.subject = `WasteWise Daily Report Summary (${new Date().toLocaleDateString()})`;
+    sendSmtpEmail.htmlContent = reportsHtml;
+
     try {
-        const { data, error } = await resend.emails.send({
-            from: 'WasteWise Reporter <onboarding@resend.dev>',
-            to: [adminEmail],
-            subject: `WasteWise Daily Report Summary (${new Date().toLocaleDateString()})`,
-            html: reportsHtml,
-        });
-
-        if (error) {
-            console.error('Resend API Error:', error);
-            return;
-        }
-
+        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
         console.log(`Admin report sent to ${adminEmail}`, data);
     } catch (error) {
         console.error('Error sending admin report:', error);
@@ -99,37 +90,32 @@ const sendAdminReportEmail = async (adminEmail, reports) => {
 const sendPasswordResetEmail = async (userEmail, token) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
 
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = { name: "WasteWise", email: "shedgemayank0@gmail.com" };
+    sendSmtpEmail.to = [{ email: userEmail }];
+    sendSmtpEmail.subject = "Password Reset Request for WasteWise";
+    sendSmtpEmail.htmlContent = `
+      <div style="background-color: #f4f4f4; padding: 20px; font-family: Arial, sans-serif; line-height: 1.6;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+          <div style="text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 20px;">
+            <h1 style="color: #2E7D32; font-size: 28px;">WasteWise ♻️</h1>
+          </div>
+          <h2 style="color: #333; text-align: center;">Password Reset Request</h2>
+          <p style="color: #555; font-size: 16px;">You are receiving this email because you (or someone else) have requested the reset of the password for your account.</p>
+          <p style="color: #555; font-size: 16px;">Please click the button below to choose a new password. This link will expire in 15 minutes.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" 
+               style="background-color: #f0ad4e; color: white; padding: 15px 30px; text-decoration: none; display: inline-block; border-radius: 8px; font-size: 18px; font-weight: bold;">
+               Reset Your Password
+            </a>
+          </div>
+          <p style="color: #777; font-size: 14px;">If you did not request this, please ignore this email and your password will remain unchanged.</p>
+        </div>
+      </div>
+    `;
+
     try {
-        const { data, error } = await resend.emails.send({
-            from: 'WasteWise <onboarding@resend.dev>',
-            to: [userEmail],
-            subject: 'Password Reset Request for WasteWise',
-            html: `
-              <div style="background-color: #f4f4f4; padding: 20px; font-family: Arial, sans-serif; line-height: 1.6;">
-                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                  <div style="text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 20px;">
-                    <h1 style="color: #2E7D32; font-size: 28px;">WasteWise ♻️</h1>
-                  </div>
-                  <h2 style="color: #333; text-align: center;">Password Reset Request</h2>
-                  <p style="color: #555; font-size: 16px;">You are receiving this email because you (or someone else) have requested the reset of the password for your account.</p>
-                  <p style="color: #555; font-size: 16px;">Please click the button below to choose a new password. This link will expire in 15 minutes.</p>
-                  <div style="text-align: center; margin: 30px 0;">
-                    <a href="${resetUrl}" 
-                       style="background-color: #f0ad4e; color: white; padding: 15px 30px; text-decoration: none; display: inline-block; border-radius: 8px; font-size: 18px; font-weight: bold;">
-                       Reset Your Password
-                    </a>
-                  </div>
-                  <p style="color: #777; font-size: 14px;">If you did not request this, please ignore this email and your password will remain unchanged.</p>
-                </div>
-              </div>
-            `,
-        });
-
-        if (error) {
-            console.error('Resend API Error:', error);
-            throw new Error('Email could not be sent.');
-        }
-
+        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
         console.log(`Password reset email sent to ${userEmail}`, data);
     } catch (error) {
         console.error('Error sending password reset email:', error);
