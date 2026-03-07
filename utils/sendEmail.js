@@ -1,12 +1,12 @@
-import * as brevo from '@getbrevo/brevo';
+import SibApiV3Sdk from '@getbrevo/brevo';
 
-const apiInstance = new brevo.TransactionalEmailsApi();
-apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+apiInstance.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
 
 const sendVerificationEmail = async (userEmail, token) => {
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
 
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
     sendSmtpEmail.sender = { name: "WasteWise", email: "shedgemayank0@gmail.com" };
     sendSmtpEmail.to = [{ email: userEmail }];
     sendSmtpEmail.subject = "Please verify your email for WasteWise";
@@ -73,7 +73,7 @@ const sendAdminReportEmail = async (adminEmail, reports) => {
       </div>
     `;
 
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
     sendSmtpEmail.sender = { name: "WasteWise Reporter", email: "shedgemayank0@gmail.com" };
     sendSmtpEmail.to = [{ email: adminEmail }];
     sendSmtpEmail.subject = `WasteWise Daily Report Summary (${new Date().toLocaleDateString()})`;
@@ -90,7 +90,7 @@ const sendAdminReportEmail = async (adminEmail, reports) => {
 const sendPasswordResetEmail = async (userEmail, token) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
 
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
     sendSmtpEmail.sender = { name: "WasteWise", email: "shedgemayank0@gmail.com" };
     sendSmtpEmail.to = [{ email: userEmail }];
     sendSmtpEmail.subject = "Password Reset Request for WasteWise";
