@@ -1,16 +1,36 @@
-import * as SibApiV3Sdk from '@getbrevo/brevo';
+// Using Brevo's REST API directly - no SDK needed!
 
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-apiInstance.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+const sendBrevoEmail = async (to, subject, htmlContent) => {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+            'accept': 'application/json',
+            'api-key': process.env.BREVO_API_KEY,
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+            sender: {
+                name: 'WasteWise',
+                email: 'shedgemayank0@gmail.com'
+            },
+            to: [{ email: to }],
+            subject: subject,
+            htmlContent: htmlContent
+        })
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Brevo API Error: ${JSON.stringify(error)}`);
+    }
+
+    return await response.json();
+};
 
 const sendVerificationEmail = async (userEmail, token) => {
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
 
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    sendSmtpEmail.sender = { name: "WasteWise", email: "shedgemayank0@gmail.com" };
-    sendSmtpEmail.to = [{ email: userEmail }];
-    sendSmtpEmail.subject = "Please verify your email for WasteWise";
-    sendSmtpEmail.htmlContent = `
+    const htmlContent = `
       <div style="background-color: #f4f4f4; padding: 20px; font-family: Arial, sans-serif; line-height: 1.6;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
           <div style="text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 20px;">
@@ -37,8 +57,8 @@ const sendVerificationEmail = async (userEmail, token) => {
     `;
 
     try {
-        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log(`Verification email sent to ${userEmail}`, data);
+        await sendBrevoEmail(userEmail, 'Please verify your email for WasteWise', htmlContent);
+        console.log(`Verification email sent to ${userEmail}`);
     } catch (error) {
         console.error('Error sending verification email:', error);
         throw new Error('Email could not be sent.');
@@ -46,7 +66,7 @@ const sendVerificationEmail = async (userEmail, token) => {
 };
 
 const sendAdminReportEmail = async (adminEmail, reports) => {
-    const reportsHtml = `
+    const htmlContent = `
       <div style="background-color: #f8f9fa; padding: 20px; font-family: Arial, sans-serif;">
         <div style="max-width: 800px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px;">
           <h2 style="color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px;">WasteWise - New Community Reports Summary</h2>
@@ -73,15 +93,9 @@ const sendAdminReportEmail = async (adminEmail, reports) => {
       </div>
     `;
 
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    sendSmtpEmail.sender = { name: "WasteWise Reporter", email: "shedgemayank0@gmail.com" };
-    sendSmtpEmail.to = [{ email: adminEmail }];
-    sendSmtpEmail.subject = `WasteWise Daily Report Summary (${new Date().toLocaleDateString()})`;
-    sendSmtpEmail.htmlContent = reportsHtml;
-
     try {
-        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log(`Admin report sent to ${adminEmail}`, data);
+        await sendBrevoEmail(adminEmail, `WasteWise Daily Report Summary (${new Date().toLocaleDateString()})`, htmlContent);
+        console.log(`Admin report sent to ${adminEmail}`);
     } catch (error) {
         console.error('Error sending admin report:', error);
     }
@@ -90,11 +104,7 @@ const sendAdminReportEmail = async (adminEmail, reports) => {
 const sendPasswordResetEmail = async (userEmail, token) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
 
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-    sendSmtpEmail.sender = { name: "WasteWise", email: "shedgemayank0@gmail.com" };
-    sendSmtpEmail.to = [{ email: userEmail }];
-    sendSmtpEmail.subject = "Password Reset Request for WasteWise";
-    sendSmtpEmail.htmlContent = `
+    const htmlContent = `
       <div style="background-color: #f4f4f4; padding: 20px; font-family: Arial, sans-serif; line-height: 1.6;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
           <div style="text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 20px;">
@@ -115,8 +125,8 @@ const sendPasswordResetEmail = async (userEmail, token) => {
     `;
 
     try {
-        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log(`Password reset email sent to ${userEmail}`, data);
+        await sendBrevoEmail(userEmail, 'Password Reset Request for WasteWise', htmlContent);
+        console.log(`Password reset email sent to ${userEmail}`);
     } catch (error) {
         console.error('Error sending password reset email:', error);
         throw new Error('Email could not be sent.');
