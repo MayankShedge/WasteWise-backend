@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import Report from '../models/reportModel.js';
-import Schedule from '../models/scheduleModel.js';
+import Schedule from '../models/ScheduleModel.js';
 import User from '../models/userModel.js';
 import { 
     sendAdminReportEmail, 
