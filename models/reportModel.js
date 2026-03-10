@@ -29,7 +29,7 @@ const reportSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['new', 'viewed', 'resolved'],
+      enum: ['new', 'in progress', 'resolved'],
       default: 'new',
     },
   },

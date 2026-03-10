@@ -50,6 +50,7 @@ mongoose
   .then(() => {
     console.log('🎉 MongoDB connected successfully.');
     console.log('🧠 Learning System initialized!');
+    initCronJobs();
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on port ${PORT}`);
       console.log('📡 Available endpoints:');
