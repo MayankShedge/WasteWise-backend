@@ -2,16 +2,15 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { initCronJobs } from './jobs/cronJobs.js';
 
-// Route imports
 import reportRoutes from './routes/reportRoutes.js';
 import locationRoutes from './routes/locationRoutes.js';
 import guideRoutes from './routes/guideRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import historyRoutes from './routes/historyRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
-import learningRoutes from './routes/learningRoutes.js'; // 🧠 NEW LEARNING IMPORT
-// --- CORRECTED CASING ---
+import learningRoutes from './routes/learningRoutes.js'; 
 import scheduleRoutes from './routes/ScheduleRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import articleRoutes from './routes/ArticleRoutes.js';
@@ -31,7 +30,7 @@ const PORT = process.env.PORT || 5001;
 const MONGO_URI = process.env.MONGO_URI;
 
 app.get('/', (req, res) => {
-  res.send('WasteWise API is running with Learning System! 🧠');
+  res.send('WasteWise API is running with Learning System!');
 });
 
 app.use('/api/reports', reportRoutes);
@@ -40,7 +39,7 @@ app.use('/api/guide', guideRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/feedback', feedbackRoutes);
-app.use('/api/learning', learningRoutes); // 🧠 NEW LEARNING ROUTE
+app.use('/api/learning', learningRoutes); 
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/articles', articleRoutes);
@@ -52,13 +51,13 @@ mongoose
     console.log('🧠 Learning System initialized!');
     initCronJobs();
     app.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
-      console.log('📡 Available endpoints:');
+      console.log(`Server is running on port ${PORT}`);
+      console.log('Available endpoints:');
       console.log('   - /api/learning/:detectedItem (Learning lookup)');
       console.log('   - /api/feedback (Feedback with auto-learning)');
     });
   })
   .catch((error) => {
-    console.error('❌ MongoDB connection error:', error.message);
+    console.error('MongoDB connection error:', error.message);
     process.exit(1);
   });
