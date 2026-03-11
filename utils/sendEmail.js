@@ -66,7 +66,7 @@ const sendVerificationEmail = async (userEmail, token) => {
 const sendAdminReportEmail = async (adminEmail, reports) => {
     const htmlContent = `
       <div style="background-color: #f8f9fa; padding: 20px; font-family: Arial, sans-serif;">
-        <div style="max-width: 800px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px;">
+        <div style="max-width: 900px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px;">
           <h2 style="color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px;">WasteWise - New Community Reports Summary</h2>
           <p style="color: #555;">You have <strong>${reports.length} new report(s)</strong> awaiting review.</p>
           <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -74,17 +74,39 @@ const sendAdminReportEmail = async (adminEmail, reports) => {
               <tr>
                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Submitted By</th>
                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Description</th>
+                <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Location</th>
                 <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Date</th>
               </tr>
             </thead>
             <tbody>
-              ${reports.map(report => `
-                <tr style="border-bottom: 1px solid #eee;">
-                  <td style="border: 1px solid #dee2e6; padding: 12px;">${report.user ? report.user.name : 'N/A'}</td>
-                  <td style="border: 1px solid #dee2e6; padding: 12px;">${report.description}</td>
-                  <td style="border: 1px solid #dee2e6; padding: 12px;">${new Date(report.createdAt).toLocaleDateString()}</td>
-                </tr>
-              `).join('')}
+              ${reports.map(report => {
+                // Format location coordinates
+                const lat = report.location?.coordinates?.[1] || 'N/A';
+                const lng = report.location?.coordinates?.[0] || 'N/A';
+                const googleMapsLink = lat !== 'N/A' && lng !== 'N/A' 
+                  ? `https://www.google.com/maps?q=${lat},${lng}`
+                  : '#';
+                const locationText = lat !== 'N/A' && lng !== 'N/A'
+                  ? `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+                  : 'No location';
+                
+                return `
+                  <tr style="border-bottom: 1px solid #eee;">
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">${report.user ? report.user.name : 'N/A'}</td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">${report.description}</td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">
+                      ${lat !== 'N/A' && lng !== 'N/A' ? `
+                        <a href="${googleMapsLink}" target="_blank" style="color: #2E7D32; text-decoration: none;">
+                          📍 View on Map
+                        </a>
+                        <br>
+                        <small style="color: #666;">${locationText}</small>
+                      ` : 'No location'}
+                    </td>
+                    <td style="border: 1px solid #dee2e6; padding: 12px;">${new Date(report.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                `;
+              }).join('')}
             </tbody>
           </table>
         </div>

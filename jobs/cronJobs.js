@@ -38,38 +38,40 @@ const sendDailyAdminReport = async () => {
 // 2. Pickup Schedule Reminders
 const sendPickupReminders = async () => {
     try {
-        console.log('Running pickup reminder cron job...');
+        console.log('📬 Running pickup reminder cron job...');
         
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const tomorrowDay = tomorrow.toLocaleDateString('en-US', { weekday: 'long' });
-        
-        const schedules = await Schedule.find({ 
-            day: tomorrowDay
-        }).populate('location');
+        // Get all schedules
+        const schedules = await Schedule.find({});
         
         if (schedules.length === 0) {
-            console.log('No pickups scheduled for tomorrow.');
+            console.log('✅ No pickup schedules configured.');
+            return;
+        }
+        
+        // Get all verified users
+        const users = await User.find({ isVerified: true });
+        
+        if (users.length === 0) {
+            console.log('No verified users to send reminders.');
             return;
         }
         
         let remindersSent = 0;
         
-        for (const schedule of schedules) {
-            const users = await User.find({ isVerified: true });
-            
-            for (const user of users) {
-                try {
-                    await sendPickupReminderEmail(
-                        user.email,
-                        schedule.wasteType,
-                        schedule.time,
-                        schedule.location ? schedule.location.area : 'Your area'
-                    );
-                    remindersSent++;
-                } catch (error) {
-                    console.error(`Failed to send reminder to ${user.email}:`, error.message);
-                }
+        // Send generic pickup reminder to all users
+        for (const user of users) {
+            try {
+                const scheduleInfo = schedules.map(s => `${s.area}: ${s.collection}`).join('\n');
+                
+                await sendPickupReminderEmail(
+                    user.email,
+                    'Waste Collection', 
+                    'As per your area schedule', 
+                    scheduleInfo 
+                );
+                remindersSent++;
+            } catch (error) {
+                console.error(`Failed to send reminder to ${user.email}:`, error.message);
             }
         }
         
@@ -95,7 +97,7 @@ const autoCloseOldReports = async () => {
             },
             {
                 $set: { 
-                    status: 'closed',
+                    status: 'resolved',
                     updatedAt: new Date()
                 }
             }
