@@ -191,54 +191,178 @@ const sendPickupReminderEmail = async (userEmail, wasteType, pickupTime, locatio
 };
 
 const sendWeeklySummaryEmail = async (userEmail, userName, stats) => {
+    // Calculate progress to next badge
+    let nextBadge = '';
+    let pointsToNext = 0;
+    let progressPercent = 0;
+    
+    if (stats.currentPoints < 100) {
+        nextBadge = 'Green Guardian';
+        pointsToNext = 100 - stats.currentPoints;
+        progressPercent = (stats.currentPoints / 100) * 100;
+    } else if (stats.currentPoints < 250) {
+        nextBadge = 'Eco Enthusiast';
+        pointsToNext = 250 - stats.currentPoints;
+        progressPercent = ((stats.currentPoints - 100) / 150) * 100;
+    } else if (stats.currentPoints < 500) {
+        nextBadge = 'Waste Warrior';
+        pointsToNext = 500 - stats.currentPoints;
+        progressPercent = ((stats.currentPoints - 250) / 250) * 100;
+    } else {
+        nextBadge = 'Max Level!';
+        pointsToNext = 0;
+        progressPercent = 100;
+    }
+
     const htmlContent = `
-      <div style="background-color: #f4f4f4; padding: 20px; font-family: Arial, sans-serif; line-height: 1.6;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-          <div style="text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 20px;">
-            <h1 style="color: #2E7D32; font-size: 28px;">WasteWise ♻️</h1>
-          </div>
-          <h2 style="color: #333; text-align: center;">📊 Your Weekly Summary</h2>
-          <p style="color: #555; font-size: 16px;">Hi <strong>${userName}</strong>, here's your impact this week!</p>
-          
-          <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #1976d2; margin-top: 0;">📈 This Week's Stats</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 10px 0; color: #555;">🗑️ Reports Submitted:</td>
-                <td style="text-align: right; font-weight: bold; color: #2E7D32;">${stats.reportsSubmitted}</td>
-              </tr>
-              <tr>
-                <td style="padding: 10px 0; color: #555;">✅ Reports Resolved:</td>
-                <td style="text-align: right; font-weight: bold; color: #2E7D32;">${stats.reportsResolved}</td>
-              </tr>
-              <tr>
-                <td style="padding: 10px 0; color: #555;">🌍 Environmental Impact:</td>
-                <td style="text-align: right; font-weight: bold; color: #2E7D32;">${stats.impactPoints} points</td>
-              </tr>
-            </table>
-          </div>
-
-          ${stats.reportsSubmitted > 0 ? `
-            <div style="text-align: center; margin: 20px 0;">
-              <p style="color: #2E7D32; font-size: 18px; font-weight: bold;">🎉 Great job contributing to a cleaner community!</p>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          @media only screen and (max-width: 600px) {
+            .container { padding: 15px !important; }
+            .stats-table td { font-size: 14px !important; }
+            h1 { font-size: 24px !important; }
+            h2 { font-size: 20px !important; }
+          }
+        </style>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
+        <div style="background-color: #f4f4f4; padding: 20px;">
+          <div class="container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <div style="text-align: center; border-bottom: 2px solid #ddd; padding-bottom: 20px; margin-bottom: 20px;">
+              <h1 style="color: #2E7D32; font-size: 28px; margin: 0;">WasteWise ♻️</h1>
+              <p style="color: #666; font-size: 14px; margin: 5px 0 0 0;">Your Weekly Impact Report</p>
             </div>
-          ` : `
-            <div style="text-align: center; margin: 20px 0;">
-              <p style="color: #666; font-size: 16px;">Haven't submitted any reports this week? Help us keep Navi Mumbai clean!</p>
+            
+            <!-- Greeting -->
+            <h2 style="color: #333; text-align: center; font-size: 22px;">📊 Hi ${userName}!</h2>
+            <p style="color: #555; font-size: 16px; text-align: center; margin-bottom: 25px;">
+              Here's your environmental impact this week
+            </p>
+            
+            <!-- Badge & Points Card -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; color: white;">
+              <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
+              <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">${stats.currentBadge}</div>
+              <div style="font-size: 18px; opacity: 0.9;">${stats.currentPoints} Total Points</div>
+              ${stats.pointsEarnedThisWeek > 0 ? `
+                <div style="background-color: rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; margin-top: 10px; font-size: 14px;">
+                  +${stats.pointsEarnedThisWeek} points earned this week! 🎉
+                </div>
+              ` : ''}
             </div>
-          `}
 
-          <div style="background-color: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <h4 style="color: #f57c00; margin-top: 0;">💡 Quick Tip</h4>
-            <p style="color: #555; margin: 0;">Remember to check your pickup schedule and segregate waste properly for better recycling!</p>
-          </div>
+            <!-- Progress to Next Badge -->
+            ${pointsToNext > 0 ? `
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="font-size: 14px; color: #666; margin-bottom: 8px;">
+                  Progress to <strong style="color: #2E7D32;">${nextBadge}</strong>
+                </div>
+                <div style="background-color: #e0e0e0; height: 10px; border-radius: 10px; overflow: hidden;">
+                  <div style="background: linear-gradient(90deg, #4caf50 0%, #8bc34a 100%); height: 100%; width: ${progressPercent}%; transition: width 0.3s;"></div>
+                </div>
+                <div style="font-size: 12px; color: #888; margin-top: 5px; text-align: right;">
+                  ${pointsToNext} points to go
+                </div>
+              </div>
+            ` : `
+              <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                <span style="font-size: 20px;">👑</span>
+                <div style="color: #856404; font-weight: bold; margin-top: 5px;">You've reached the maximum level!</div>
+              </div>
+            `}
+            
+            <!-- This Week's Stats -->
+            <div style="background-color: #e3f2fd; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+              <h3 style="color: #1976d2; margin-top: 0; font-size: 18px; margin-bottom: 15px;">📈 This Week's Activity</h3>
+              <table class="stats-table" style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+                  <td style="padding: 12px 0; color: #555; font-size: 15px;">
+                    <span style="margin-right: 8px;">🗑️</span>Reports Submitted
+                  </td>
+                  <td style="text-align: right; font-weight: bold; color: #2E7D32; font-size: 18px;">
+                    ${stats.reportsSubmitted}
+                  </td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+                  <td style="padding: 12px 0; color: #555; font-size: 15px;">
+                    <span style="margin-right: 8px;">✅</span>Reports Resolved
+                  </td>
+                  <td style="text-align: right; font-weight: bold; color: #2E7D32; font-size: 18px;">
+                    ${stats.reportsResolved}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0; color: #555; font-size: 15px;">
+                    <span style="margin-right: 8px;">⭐</span>Impact Points
+                  </td>
+                  <td style="text-align: right; font-weight: bold; color: #2E7D32; font-size: 18px;">
+                    ${stats.impactPoints}
+                  </td>
+                </tr>
+              </table>
+            </div>
 
-          <div style="text-align: center; font-size: 12px; color: #aaa; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
-            <p>WasteWise Navi Mumbai</p>
-            <p>Keep making a difference! ♻️</p>
+            <!-- Motivational Message -->
+            ${stats.reportsSubmitted > 0 ? `
+              <div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; color: white;">
+                <div style="font-size: 32px; margin-bottom: 10px;">🎉</div>
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">Amazing Work!</div>
+                <div style="font-size: 14px; opacity: 0.9;">You're making Navi Mumbai cleaner, one report at a time!</div>
+              </div>
+            ` : `
+              <div style="background-color: #fff3e0; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 32px; margin-bottom: 10px;">🌱</div>
+                <div style="color: #e65100; font-size: 16px; margin-bottom: 5px;">No reports this week?</div>
+                <div style="color: #666; font-size: 14px;">Help us keep Navi Mumbai clean - submit a report today!</div>
+              </div>
+            `}
+
+            <!-- Quick Stats Summary -->
+            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-around; text-align: center; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 120px; padding: 10px;">
+                  <div style="font-size: 24px; font-weight: bold; color: #2E7D32;">${stats.currentPoints}</div>
+                  <div style="font-size: 12px; color: #666; margin-top: 5px;">Total Points</div>
+                </div>
+                <div style="flex: 1; min-width: 120px; padding: 10px;">
+                  <div style="font-size: 24px; font-weight: bold; color: #1976d2;">${stats.totalReportsAllTime || 0}</div>
+                  <div style="font-size: 12px; color: #666; margin-top: 5px;">Reports Ever</div>
+                </div>
+                ${stats.leaderboardRank ? `
+                  <div style="flex: 1; min-width: 120px; padding: 10px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #f57c00;">#${stats.leaderboardRank}</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">Leaderboard</div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Quick Tip -->
+            <div style="background-color: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f57c00;">
+              <h4 style="color: #f57c00; margin: 0 0 10px 0; font-size: 16px;">💡 Quick Tip</h4>
+              <p style="color: #555; margin: 0; font-size: 14px; line-height: 1.5;">
+                Remember to segregate waste at source! Dry waste (plastic, paper) and wet waste (food scraps) should be kept separate for better recycling.
+              </p>
+            </div>
+
+            <!-- Footer -->
+            <div style="text-align: center; font-size: 12px; color: #aaa; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+              <p style="margin: 5px 0;">WasteWise Navi Mumbai</p>
+              <p style="margin: 5px 0;">Keep making a difference! ♻️</p>
+              <p style="margin: 15px 0 0 0; font-size: 11px;">
+                <a href="#" style="color: #aaa; text-decoration: none;">Unsubscribe</a>
+              </p>
+            </div>
+            
           </div>
         </div>
-      </div>
+      </body>
+      </html>
     `;
 
     try {

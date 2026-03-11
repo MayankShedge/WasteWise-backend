@@ -117,7 +117,7 @@ const autoCloseOldReports = async () => {
 // 4. Weekly User Summary
 const sendWeeklyUserSummaries = async () => {
     try {
-        console.log('Running weekly user summary cron job...');
+        console.log('📊 Running weekly user summary cron job...');
         
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -128,6 +128,7 @@ const sendWeeklyUserSummaries = async () => {
         
         for (const user of users) {
             try {
+                // Weekly stats
                 const reportsSubmitted = await Report.countDocuments({
                     user: user._id,
                     createdAt: { $gte: oneWeekAgo }
@@ -139,10 +140,29 @@ const sendWeeklyUserSummaries = async () => {
                     updatedAt: { $gte: oneWeekAgo }
                 });
                 
+                // Total reports ever (for all-time stats)
+                const totalReportsAllTime = await Report.countDocuments({
+                    user: user._id
+                });
+                
+                // Calculate points earned this week
+                const pointsEarnedThisWeek = reportsSubmitted * 10 + reportsResolved * 5;
+                
+                // Get leaderboard rank (optional - can be expensive)
+                const usersWithMorePoints = await User.countDocuments({
+                    points: { $gt: user.points }
+                });
+                const leaderboardRank = usersWithMorePoints + 1;
+                
                 const stats = {
                     reportsSubmitted,
                     reportsResolved,
-                    impactPoints: reportsSubmitted * 10 + reportsResolved * 5
+                    impactPoints: pointsEarnedThisWeek,
+                    currentPoints: user.points,
+                    currentBadge: user.badge || 'Recycling Rookie',
+                    pointsEarnedThisWeek,
+                    totalReportsAllTime,
+                    leaderboardRank: leaderboardRank <= 100 ? leaderboardRank : null // Only show if in top 100
                 };
                 
                 await sendWeeklySummaryEmail(user.email, user.name, stats);
@@ -153,10 +173,10 @@ const sendWeeklyUserSummaries = async () => {
             }
         }
         
-        console.log(`Sent ${summariesSent} weekly summary email(s).`);
+        console.log(`✅ Sent ${summariesSent} weekly summary email(s).`);
         
     } catch (error) {
-        console.error('Error in weekly user summary cron job:', error);
+        console.error('❌ Error in weekly user summary cron job:', error);
     }
 };
 
