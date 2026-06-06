@@ -5,18 +5,33 @@ import { getIO } from '../utils/socket.js';
 const createReport = async (req, res) => {
   try {
     const { description, location } = req.body;
-    const imageUrl = req.file.path; 
+    const imageUrl = req.file.path;
     const parsedLocation = JSON.parse(location);
+
     if (!description || !imageUrl || !parsedLocation) {
       return res.status(400).json({ message: 'Please provide all required fields.' });
     }
+
     const newReport = new Report({
       description,
       imageUrl,
       location: parsedLocation,
       user: req.user._id
     });
+
     const savedReport = await newReport.save();
+
+    // Populate user name so admin sees it immediately in the table
+    await savedReport.populate('user', 'name email');
+
+    try {
+      const io = getIO();
+      io.to('admin-room').emit('newReportSubmitted', savedReport);
+      console.log('📡 Emitted newReportSubmitted to admin-room');
+    } catch (socketErr) {
+      console.error('Socket emit error:', socketErr.message);
+    }
+
     res.status(201).json(savedReport);
   } catch (error) {
     console.error('Error creating report:', error);

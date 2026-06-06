@@ -60,8 +60,6 @@ mongoose
       console.log('Available endpoints:');
       console.log('   - /api/learning/:detectedItem (Learning lookup)');
       console.log('   - /api/feedback (Feedback with auto-learning)');
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🔌 Socket.io ready`);
     });
   })
   .catch((error) => {

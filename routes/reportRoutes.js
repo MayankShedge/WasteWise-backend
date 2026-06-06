@@ -28,7 +28,6 @@ router.route('/')
 router.route('/email-summary')
   .post(protect, admin, emailReportSummary);
 
-// User's own reports
 router.get('/my-reports', protect, async (req, res) => {
   try {
     const reports = await Report.find({
@@ -43,7 +42,6 @@ router.get('/my-reports', protect, async (req, res) => {
   }
 });
 
-// Keep this AFTER /my-reports
 router.route('/:id')
   .put(protect, admin, updateReportStatus)
   .delete(protect, admin, deleteReport);
