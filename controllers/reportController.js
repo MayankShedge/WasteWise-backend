@@ -1,5 +1,6 @@
 import Report from '../models/reportModel.js';
 import { sendAdminReportEmail } from '../utils/sendEmail.js';
+import { getIO } from '../utils/socket.js';
 
 const createReport = async (req, res) => {
   try {
@@ -22,6 +23,7 @@ const createReport = async (req, res) => {
     res.status(500).json({ message: 'Server error while creating report.' });
   }
 };
+
 const getReports = async (req, res) => {
   try {
     const reports = await Report.find({}).populate('user', 'name email').sort({ createdAt: -1 });
@@ -30,6 +32,7 @@ const getReports = async (req, res) => {
     res.status(500).json({ message: 'Server error while fetching reports.' });
   }
 };
+
 const updateReportStatus = async (req, res) => {
     try {
         const { status } = req.body;
@@ -37,6 +40,22 @@ const updateReportStatus = async (req, res) => {
         if (report) {
             report.status = status || report.status;
             const updatedReport = await report.save();
+
+            try {
+      const io = getIO();
+      const targetUserId = updatedReport.user.toString();
+
+      io.to(targetUserId).emit('reportStatusUpdated', {
+        reportId: updatedReport._id,
+        status:   updatedReport.status,
+        message:  getStatusMessage(updatedReport.status),
+      });
+
+      console.log(`📡 Emitted status update to user ${targetUserId}`);
+      } catch (socketError) {
+        console.error('Socket emit error:', socketError.message);
+      }
+      
             res.json(updatedReport);
         } else {
             res.status(404).json({ message: 'Report not found' });
@@ -45,6 +64,7 @@ const updateReportStatus = async (req, res) => {
         res.status(500).json({ message: 'Server error while updating report.' });
     }
 };
+
 const deleteReport = async (req, res) => {
   try {
     const report = await Report.findById(req.params.id);
@@ -59,7 +79,6 @@ const deleteReport = async (req, res) => {
   }
 };
 
-
 const emailReportSummary = async (req, res) => {
     try {
         const newReports = await Report.find({ status: 'new' }).populate('user', 'name');
@@ -68,7 +87,6 @@ const emailReportSummary = async (req, res) => {
             return res.status(400).json({ message: 'No new reports to send.' });
         }
 
-        // --- THIS IS THE ONLY LINE THAT CHANGES ---
         const adminEmail = process.env.ADMIN_EMAIL; 
         
         if (!adminEmail) {
@@ -84,6 +102,13 @@ const emailReportSummary = async (req, res) => {
     }
 };
 
+const getStatusMessage = (status) => {
+  const messages = {
+    new:         'Your report has been received.',
+    'in-progress': 'Your report is being reviewed by our team.',
+    resolved:    'Your report has been resolved. Thank you!',
+  };
+  return messages[status] || `Status updated to: ${status}`;
+};
 
 export { createReport, getReports, updateReportStatus, deleteReport, emailReportSummary };
-

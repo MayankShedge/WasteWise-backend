@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { initCronJobs } from './jobs/cronJobs.js';
-
+import { createServer } from 'http';         
+import { initSocket } from './socket.js';
 import reportRoutes from './routes/reportRoutes.js';
 import locationRoutes from './routes/locationRoutes.js';
 import guideRoutes from './routes/guideRoutes.js';
@@ -18,6 +19,7 @@ import articleRoutes from './routes/ArticleRoutes.js';
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 
 app.use(cors({
   origin: '*', 
@@ -50,11 +52,16 @@ mongoose
     console.log('🎉 MongoDB connected successfully.');
     console.log('🧠 Learning System initialized!');
     initCronJobs();
-    app.listen(PORT, () => {
+
+    initSocket(httpServer);
+
+    httpServer.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
       console.log('Available endpoints:');
       console.log('   - /api/learning/:detectedItem (Learning lookup)');
       console.log('   - /api/feedback (Feedback with auto-learning)');
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🔌 Socket.io ready`);
     });
   })
   .catch((error) => {
