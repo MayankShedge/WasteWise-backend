@@ -4,7 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { initCronJobs } from './jobs/cronJobs.js';
 import { createServer } from 'http';         
-import { initSocket } from './utils/socket';
+import { initSocket } from './utils/socket.js';
 import reportRoutes from './routes/reportRoutes.js';
 import locationRoutes from './routes/locationRoutes.js';
 import guideRoutes from './routes/guideRoutes.js';
