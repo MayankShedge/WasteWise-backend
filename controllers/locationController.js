@@ -95,4 +95,79 @@ const getReportClusters = async (req, res) => {
   }
 };
 
-export { getLocations, getNearbyLocations, getReportClusters };
+const createLocation = async (req, res) => {
+  try {
+    const { name, address, locationType, geometry, operatingHours } = req.body;
+
+    if (!name || !address || !locationType || !geometry) {
+      return res.status(400).json({ message: 'Please provide all required fields.' });
+    }
+
+    const [lng, lat] = geometry.coordinates;
+    if (isNaN(lng) || isNaN(lat) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return res.status(400).json({ message: 'Invalid coordinates provided.' });
+    }
+
+    const location = new Location({
+      name,
+      address,
+      locationType,
+      geometry,
+      operatingHours: operatingHours || 'N/A',
+    });
+
+    const saved = await location.save();
+    res.status(201).json(saved);
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Server error while creating location.' });
+  }
+};
+
+const updateLocation = async (req, res) => {
+  try {
+    const { name, address, locationType, geometry, operatingHours } = req.body;
+
+    const location = await Location.findById(req.params.id);
+    if (!location) {
+      return res.status(404).json({ message: 'Location not found.' });
+    }
+
+    if (name)           location.name           = name;
+    if (address)        location.address        = address;
+    if (locationType)   location.locationType   = locationType;
+    if (operatingHours) location.operatingHours = operatingHours;
+    if (geometry) {
+      const [lng, lat] = geometry.coordinates;
+      if (isNaN(lng) || isNaN(lat) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        return res.status(400).json({ message: 'Invalid coordinates provided.' });
+      }
+      location.geometry = geometry;
+    }
+
+    const updated = await location.save();
+    res.status(200).json(updated);
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Server error while updating location.' });
+  }
+};
+
+const deleteLocation = async (req, res) => {
+  try {
+    const location = await Location.findById(req.params.id);
+    if (!location) {
+      return res.status(404).json({ message: 'Location not found.' });
+    }
+    await location.deleteOne();
+    res.status(200).json({ message: 'Location deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error while deleting location.' });
+  }
+};
+
+export { getLocations, getNearbyLocations, getReportClusters, createLocation, updateLocation, deleteLocation,};
