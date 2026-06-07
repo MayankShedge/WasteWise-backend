@@ -6,22 +6,22 @@ import {
   verifyUserEmail,
   addUserPoints,
   getLeaderboard,
-  forgotPassword, // 1. Import the new functions
+  forgotPassword,
   resetPassword,
+  googleAuth,      
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Public routes
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/google-auth', googleAuth);          
 router.get('/verify/:token', verifyUserEmail);
 router.get('/leaderboard', getLeaderboard);
-router.post('/forgot-password', forgotPassword); 
-router.put('/reset-password/:token', resetPassword); 
+router.post('/forgot-password', forgotPassword);
+router.put('/reset-password/:token', resetPassword);
 
-// Protected routes
 router.get('/profile', protect, getUserProfile);
 router.post('/add-points', protect, addUserPoints);
 

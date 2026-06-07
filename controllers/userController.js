@@ -2,6 +2,8 @@ import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/sendEmail.js';
+import { OAuth2Client } from 'google-auth-library';
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const getBadgeForPoints = (points) => {
     if (points >= 500) return 'Waste Warrior';
@@ -161,5 +163,83 @@ const resetPassword = async (req, res) => {
     }
 };
 
-export { registerUser, loginUser, getUserProfile, verifyUserEmail, addUserPoints, getLeaderboard, forgotPassword, resetPassword };
+const googleAuth = async (req, res) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    return res.status(400).json({ message: 'Google credential is required.' });
+  }
+
+  try {
+    // Verify the token with Google
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload) {
+      return res.status(401).json({
+        message: 'Invalid Google token.'
+      });
+    }
+
+    const {
+      sub: googleId,
+      email,
+      name,
+      email_verified,
+    } = payload;
+
+    if (!email_verified) {
+      return res.status(400).json({ message: 'Google account email is not verified.' });
+    }
+
+    // Check if user already exists
+    let user = await User.findOne({ email });
+
+    if (user) {
+
+      if (user.googleId && user.googleId !== googleId) {
+        return res.status(400).json({
+          message: 'Google account mismatch.'
+        });
+      }
+
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.isVerified = true;
+        await user.save();
+      }
+
+    } else {
+
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        isVerified: true,
+      });
+
+    }
+
+    // Return same shape as regular login so AuthContext works identically
+    res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      points: user.points,
+      isAdmin: user.isAdmin,
+      badge: user.badge,
+      token: generateToken(user._id),
+    });
+
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    res.status(401).json({ message: 'Google authentication failed.' });
+  }
+};
+
+export { registerUser, loginUser, getUserProfile, verifyUserEmail, addUserPoints, getLeaderboard, forgotPassword, resetPassword, googleAuth };
 
