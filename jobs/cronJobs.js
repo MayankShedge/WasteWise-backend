@@ -183,7 +183,7 @@ const sendWeeklyUserSummaries = async () => {
 // Initialize all cron jobs
 export const initCronJobs = () => {
     cron.schedule('0 9 * * *', sendDailyAdminReport, { timezone: "Asia/Kolkata" });
-    cron.schedule('0 18 * * *', sendPickupReminders, { timezone: "Asia/Kolkata" });
+    cron.schedule('30 12 * * 1', sendPickupReminders, { timezone: "Asia/Kolkata" });
     cron.schedule('0 0 * * 0', autoCloseOldReports, { timezone: "Asia/Kolkata" });
     cron.schedule('0 8 * * 1', sendWeeklyUserSummaries, { timezone: "Asia/Kolkata" });
     
