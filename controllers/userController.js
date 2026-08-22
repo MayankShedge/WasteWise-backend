@@ -4,6 +4,13 @@ import crypto from 'crypto';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/sendEmail.js';
 import { OAuth2Client } from 'google-auth-library';
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+import {
+  getCache,
+  setCache,
+  invalidateCache,
+  CACHE_KEYS,
+  TTL,
+} from '../utils/cache.js';
 
 const getBadgeForPoints = (points) => {
     if (points >= 500) return 'Waste Warrior';
@@ -87,14 +94,15 @@ const addUserPoints = async (req, res) => {
       user.points = user.points + pointsToAdd;
       user.badge = getBadgeForPoints(user.points);
       const updatedUser = await user.save();
+      invalidateCache(CACHE_KEYS.LEADERBOARD);  // bust cache — rankings changed
       res.json({
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        points: updatedUser.points,
+        _id:     updatedUser._id,
+        name:    updatedUser.name,
+        email:   updatedUser.email,
+        points:  updatedUser.points,
         isAdmin: updatedUser.isAdmin,
-        badge: updatedUser.badge, 
-        token: req.headers.authorization.split(' ')[1]
+        badge:   updatedUser.badge,
+        token:   req.headers.authorization.split(' ')[1]
       });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -105,12 +113,20 @@ const addUserPoints = async (req, res) => {
 };
 
 const getLeaderboard = async (req, res) => {
-    try {
-        const topUsers = await User.find({}).sort({ points: -1 }).limit(10).select('name points');
-        res.json(topUsers);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error while fetching leaderboard.' });
+  try {
+    const cached = getCache(CACHE_KEYS.LEADERBOARD);
+    if (cached) {
+      return res.json(cached);
     }
+    const topUsers = await User.find({})
+      .sort({ points: -1 })
+      .limit(10)
+      .select('name points');
+    setCache(CACHE_KEYS.LEADERBOARD, topUsers, TTL.FIVE_MINUTES);
+    res.json(topUsers);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error while fetching leaderboard.' });
+  }
 };
 
 const forgotPassword = async (req, res) => {

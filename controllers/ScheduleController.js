@@ -1,4 +1,5 @@
 import Schedule from '../models/ScheduleModel.js';
+import { invalidateCache, CACHE_KEYS } from '../utils/cache.js';
 
 const getSchedules = async (req, res) => {
     try {
@@ -16,6 +17,7 @@ const createSchedule = async (req, res) => {
             collection: 'New collection details (click to edit)',
         });
         const savedSchedule = await newSchedule.save();
+        invalidateCache(CACHE_KEYS.GUIDE_DATA);
         res.status(201).json(savedSchedule);
     } catch (error) {
          res.status(500).json({ message: 'Server error while creating schedule.' });
@@ -32,6 +34,7 @@ const updateSchedule = async (req, res) => {
             schedule.collection = collection || schedule.collection;
 
             const updatedSchedule = await schedule.save();
+            invalidateCache(CACHE_KEYS.GUIDE_DATA);
             res.json(updatedSchedule);
         } else {
             res.status(404).json({ message: 'Schedule not found' });
@@ -46,6 +49,7 @@ const deleteSchedule = async (req, res) => {
         const schedule = await Schedule.findById(req.params.id);
         if (schedule) {
             await schedule.deleteOne();
+            invalidateCache(CACHE_KEYS.GUIDE_DATA);
             res.json({ message: 'Schedule removed' });
         } else {
             res.status(404).json({ message: 'Schedule not found' });
